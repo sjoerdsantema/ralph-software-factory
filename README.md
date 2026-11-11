@@ -12,7 +12,14 @@ ralph-plan.sh  ──►  PRD.md  ──►  ralph-once.sh / ralph-afk.sh  ─�
   plan the sprint)    backlog)      per run)
 ```
 
-| File | What it's for |
+The project has two folders:
+
+- `standard/`: the file-based scripts, with `PRD.md` and `progress.txt` as the backlog and log.
+- `github/`: the same workflow, with the backlog kept in GitHub Issues (see [GitHub Issues mode](#github-issues-mode)).
+
+The standard scripts read and write `PRD.md` and `progress.txt` in the current directory, so run them from inside `standard/` (or copy the contents of `standard/` into the root of the project you're building).
+
+| File (in `standard/`) | What it's for |
 | --- | --- |
 | `ralph-plan.sh` | Plan a sprint: Claude suggests user stories and you accept or reject each one |
 | `PRD.md` | The backlog: accepted user stories, their priority and status, and what's out of scope |
@@ -29,7 +36,7 @@ ralph-plan.sh  ──►  PRD.md  ──►  ralph-once.sh / ralph-afk.sh  ─�
 Make the scripts executable once:
 
 ```bash
-chmod +x ralph-plan.sh ralph-once.sh ralph-afk.sh
+chmod +x standard/*.sh github/*.sh
 ```
 
 ## 1. Plan the sprint
@@ -82,7 +89,7 @@ While it runs you'll see a short live feed of Claude's messages and tool calls. 
 
 ## GitHub Issues mode
 
-The `github-ralph-*.sh` scripts do the same job, but keep the backlog in GitHub Issues instead of `PRD.md` and `progress.txt`. They use the repo of your `origin` remote, so you also need [`gh`](https://cli.github.com/) installed and logged in (`gh auth login`).
+The `github/github-ralph-*.sh` scripts do the same job, but keep the backlog in GitHub Issues instead of `PRD.md` and `progress.txt`. They use the repo of your `origin` remote, so you also need [`gh`](https://cli.github.com/) installed and logged in (`gh auth login`).
 
 | File-based | GitHub Issues |
 | --- | --- |
@@ -93,9 +100,9 @@ The `github-ralph-*.sh` scripts do the same job, but keep the backlog in GitHub 
 | `progress.txt` | A summary comment on each finished issue. The last 5 are given to Claude as context |
 
 ```bash
-./github-ralph-plan.sh                    # pick a sprint name + mission, review stories → issues
-./github-ralph-once.sh [issue-number]     # build one story interactively (default: next by priority)
-./github-ralph-afk.sh 5 ["Sprint name"]   # build up to 5 stories unattended (default: latest open milestone)
+./github/github-ralph-plan.sh                    # pick a sprint name + mission, review stories → issues
+./github/github-ralph-once.sh [issue-number]     # build one story interactively (default: next by priority)
+./github/github-ralph-afk.sh 5 ["Sprint name"]   # build up to 5 stories unattended (default: latest open milestone)
 ```
 
 All the GitHub calls are made by the scripts, never by Claude:
@@ -108,4 +115,4 @@ Things to know:
 - **`needs-attention`.** If a run ends without a commit, the issue gets a comment and the `needs-attention` label, and the loop skips it. Remove the label to let Ralph try again.
 - **Other repo.** Set `GH_REPO=owner/name` to work against a different repo than `origin`.
 - **Labels** (`user-story`, `P1`–`P3`, `in-progress`, `needs-attention`, `rejected`) are created automatically on the first run.
-- Shared code lives in `github-ralph-lib.sh`.
+- Shared code lives in `github/github-ralph-lib.sh`.
