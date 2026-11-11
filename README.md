@@ -79,3 +79,33 @@ While it runs you'll see a short live feed of Claude's messages and tool calls. 
 - **Cost.** Each iteration is a full Claude session. `ralph-afk.sh` prints the cost of each iteration when it finishes.
 - **Scratch files** go in `.ralph-tmp/` and logs in `.ralph-logs/`. Git ignores both.
 - **Editing the PRD by hand** is fine: reorder priorities, tweak stories, or add lines to *Out of scope*. Keep the `### US-NNN: Title` heading format so new stories keep counting up.
+
+## GitHub Issues mode
+
+The `github-ralph-*.sh` scripts do the same job, but keep the backlog in GitHub Issues instead of `PRD.md` and `progress.txt`. They use the repo of your `origin` remote, so you also need [`gh`](https://cli.github.com/) installed and logged in (`gh auth login`).
+
+| File-based | GitHub Issues |
+| --- | --- |
+| A story in `PRD.md` | An open issue labelled `user-story` + `P1`/`P2`/`P3` |
+| Sprint mission | A milestone. The mission is its description |
+| *Out of scope* list | Issues labelled `rejected`, closed as "not planned" |
+| `Status: TODO` / done | Open issue / closed issue. `in-progress` while Ralph works on it |
+| `progress.txt` | A summary comment on each finished issue. The last 5 are given to Claude as context |
+
+```bash
+./github-ralph-plan.sh                    # pick a sprint name + mission, review stories → issues
+./github-ralph-once.sh [issue-number]     # build one story interactively (default: next by priority)
+./github-ralph-afk.sh 5 ["Sprint name"]   # build up to 5 stories unattended (default: latest open milestone)
+```
+
+All the GitHub calls are made by the scripts, never by Claude:
+- The script picks the next issue: the open `user-story` issue in the sprint with the highest priority (lowest issue number first).
+- Claude gets the issue text, implements it and commits with `Closes #N`.
+- The script then posts the summary and commit list as a comment and closes the issue. Nothing is pushed.
+
+Things to know:
+- **Only your own issues are built.** In AFK mode Claude acts on issue text without asking, so the scripts only pick up issues created by your `gh` account, and only read your own comments. Set `RALPH_ANY_AUTHOR=1` to pick up anyone's issues, but only in a repo where you trust everyone who can open issues.
+- **`needs-attention`.** If a run ends without a commit, the issue gets a comment and the `needs-attention` label, and the loop skips it. Remove the label to let Ralph try again.
+- **Other repo.** Set `GH_REPO=owner/name` to work against a different repo than `origin`.
+- **Labels** (`user-story`, `P1`–`P3`, `in-progress`, `needs-attention`, `rejected`) are created automatically on the first run.
+- Shared code lives in `github-ralph-lib.sh`.
